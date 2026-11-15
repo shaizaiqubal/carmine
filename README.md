@@ -1,9 +1,8 @@
 # Carmine
 
-Carmine is a red-team queue for startup founders. This repository currently
-contains the platform skeleton only: authentication, startup profiles, an
-empty objection queue, portable migrations, and deployment plumbing. It has
-no LLM, retrieval, scoring, or other AI features yet.
+Carmine is a red-team queue for startup founders. This repository contains the
+platform skeleton plus the Step 2 LLM and embedding layer. It has no retrieval,
+attack modules, scoring, or real objection prompts yet.
 
 ## Repository layout
 
@@ -59,6 +58,18 @@ Backend (`backend/.env`):
 - `DATABASE_PATH`: optional local SQLite path, default `data/carmine.db`.
 - `CORS_ORIGINS`: comma-separated browser origins, for example
   `http://localhost:5173`.
+- `LLM_CONFIG_PATH`: optional path to the provider routing TOML. LLM code is
+  used by pipeline scripts, not imported at web-service startup.
+- `LLM_CACHE_TTL_SECONDS`: cache lifetime, default 86400 seconds.
+- `LLM_MAX_ATTEMPTS` and `LLM_MAX_TOTAL_WAIT_SECONDS`: retry caps.
+- `LLM_MAX_OVERLOAD_RETRIES`: maximum retries for 429/503/overload responses.
+- `LLM_CIRCUIT_FAILURE_COUNT` and `LLM_CIRCUIT_COOLDOWN_SECONDS`: per-model
+  overload circuit-breaker settings.
+- `LLM_DEBUG_LOCAL`: must remain `false` in production; full prompt/response
+  debug logging is intentionally not enabled by default.
+- `CARMINE_ENV`: use `production` to refuse local debug mode.
+- `GEMINI_API_KEY`, `GROQ_API_KEY`: local/pipeline-only model keys. Do not add
+  these to Render.
 
 Frontend (`frontend/.env`):
 
@@ -68,6 +79,38 @@ Frontend (`frontend/.env`):
 - `VITE_API_URL`: FastAPI URL, for example `http://localhost:8000`.
 
 GitHub Actions secrets/variables are documented in `.github/workflows/README.md`.
+
+## Step 2 LLM and embeddings
+
+Provider routing and model IDs live in `backend/app/llm/config.toml`, not in
+Python code. `LLMClient.complete()` is the single structured/text completion
+entry point. It applies ordered fallback, bounded retries with jitter and
+`Retry-After`, Pydantic validation plus one repair attempt, provider rate and
+daily guards, database caching, and privacy-safe `llm_calls` logging. It also
+applies per-purpose deadlines and per-model overload circuit breakers.
+`llm_calls` stores one row per provider attempt with HTTP status and attempt
+latency; completion metadata separately includes total call latency across
+retries.
+
+The `EmbeddingEngine` uses CPU-only `BAAI/bge-small-en-v1.5`, pinned to
+revision `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a`, with 384 dimensions.
+Embeddings and cache rows are startup-scoped when a startup ID is available;
+startup deletion purges both. The model is loaded only by pipeline scripts and
+tests, never by the Render web service.
+
+Run the provider probe and usage report locally from `backend` after installing
+the pipeline dependencies:
+
+```sh
+pip install -r requirements-pipeline.txt
+python scripts/llm_check.py
+python scripts/usage_report.py
+python scripts/embedding_benchmark.py
+```
+
+The provider probe prints only provider/model names, status, latency, and token
+counts. The GitHub Actions workflows `LLM provider check` and `Embedding
+benchmark` are manual triggers.
 
 ## Tests
 
@@ -105,8 +148,8 @@ paid plan for a no-pause guarantee.
 
 ## Current scope and known limitations
 
-Implemented endpoints are `GET /health`, `GET /me`, `POST/GET /startups`, and
-`GET /startups/{id}/objections`. The objection endpoint intentionally returns
-an empty list. The remaining API table, AI pipeline, verdicts, and weekly jobs
-are not implemented in this step.
+Implemented endpoints include `GET /health`, `GET /me`, `POST/GET/DELETE
+/startups`, and `GET /startups/{id}/objections`. The objection endpoint
+intentionally returns an empty list. The remaining API table, retrieval,
+attack modules, verdicts, and weekly jobs are not implemented yet.
 

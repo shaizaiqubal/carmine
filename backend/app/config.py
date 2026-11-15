@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,8 +11,17 @@ class Settings(BaseSettings):
     turso_auth_token: str = ""
     database_path: str = "data/carmine.db"
     cors_origins: str = "http://localhost:5173"
+    llm_config_path: str = ""
+    gemini_api_key: str = ""
+    groq_api_key: str = ""
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(
+            str(Path(__file__).resolve().parents[1] / ".env"),
+            str(Path(__file__).resolve().parents[2] / ".env"),
+        ),
+        extra="ignore",
+    )
 
     @property
     def cors_origin_list(self) -> list[str]:

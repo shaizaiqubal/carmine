@@ -23,5 +23,6 @@ def client():
     app.dependency_overrides[get_auth_user] = lambda: current["user"]
     with TestClient(app) as test_client:
         test_client.current_user = current
+        test_client.db = db
         yield test_client
     db.close()

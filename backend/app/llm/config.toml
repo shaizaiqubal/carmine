@@ -1,0 +1,72 @@
+[settings]
+cache_ttl_seconds = 86400
+max_attempts_per_provider = 3
+max_overload_retries = 2
+max_total_wait_seconds = 20
+circuit_failure_count = 2
+circuit_cooldown_seconds = 60
+schema_version = "1"
+debug_local = false
+
+[timeouts.extract]
+attempt_seconds = 30
+total_seconds = 90
+
+[timeouts.verify]
+attempt_seconds = 30
+total_seconds = 90
+
+[timeouts.rank_brief]
+attempt_seconds = 45
+total_seconds = 120
+
+[timeouts.assumption_extract]
+attempt_seconds = 20
+total_seconds = 60
+
+[timeouts.counter]
+attempt_seconds = 20
+total_seconds = 60
+
+[timeouts.other]
+attempt_seconds = 20
+total_seconds = 60
+
+[providers.gemini]
+base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+api_key_env = "GEMINI_API_KEY"
+requests_per_minute = 15
+tokens_per_minute = 100000
+daily_requests = 0
+daily_tokens = 0
+
+[providers.groq]
+base_url = "https://api.groq.com/openai/v1"
+api_key_env = "GROQ_API_KEY"
+requests_per_minute = 30
+tokens_per_minute = 8000
+daily_requests = 1000
+daily_tokens = 200000
+
+[routes.extract]
+pairs = [["gemini", "gemini-3.5-flash-lite"], ["gemini", "gemini-3.1-flash-lite"]]
+
+[routes.verify]
+pairs = [["groq", "openai/gpt-oss-120b"], ["groq", "qwen/qwen3.8-27b"], ["gemini", "gemma-4-31b-it"]]
+
+[routes.rank_brief]
+pairs = [["gemini", "gemini-3.8-flash"], ["gemini", "gemini-3.6-flash"]]
+
+[routes.assumption_extract]
+pairs = [["gemini", "gemini-3.6-flash"], ["gemini", "gemini-3.8-flash"]]
+
+[routes.counter]
+pairs = [["gemini", "gemini-3.6-flash"], ["gemini", "gemini-3.8-flash"]]
+
+[routes.other]
+pairs = [["gemini", "gemini-3.5-flash-lite"]]
+
+[embeddings]
+model = "BAAI/bge-small-en-v1.5"
+revision = "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a"
+dim = 384

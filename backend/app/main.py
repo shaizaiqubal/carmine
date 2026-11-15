@@ -70,6 +70,14 @@ def make_app(settings: Settings | None = None, database: Database | None = None)
         rows = db.execute("SELECT id, name, profile_json, created_at FROM startups WHERE owner_user_id = ? ORDER BY created_at DESC", (user.id,)).fetchall()
         return [{"id": row[0], "name": row[1], **json.loads(row[2]), "created_at": row[3]} for row in rows]
 
+    @app.delete("/startups/{startup_id}", status_code=204)
+    def delete_startup(startup_id: str, user: AuthUser = Depends(current_user)):
+        owned_startup(startup_id, user)
+        db.execute("DELETE FROM llm_cache WHERE startup_id = ?", (startup_id,))
+        db.execute("DELETE FROM embeddings WHERE startup_id = ?", (startup_id,))
+        db.execute("DELETE FROM startups WHERE id = ? AND owner_user_id = ?", (startup_id, user.id))
+        db.commit()
+
     def owned_startup(startup_id: str, user: AuthUser):
         row = db.execute("SELECT id, name, profile_json, created_at FROM startups WHERE id = ? AND owner_user_id = ?", (startup_id, user.id)).fetchone()
         if not row:
