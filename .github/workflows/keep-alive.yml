@@ -10,7 +10,8 @@ jobs:
         run: curl --fail --retry 3 "$API_HEALTH_URL"
         env: {API_HEALTH_URL: '${{ vars.API_HEALTH_URL }}'}
       - name: Generate Supabase activity
-        run: curl --fail --retry 3 -H "apikey: $SUPABASE_ANON_KEY" "$SUPABASE_URL/auth/v1/health"
+        run: >-
+          curl --fail --retry 3 -H "apikey: $SUPABASE_ANON_KEY" "$SUPABASE_URL/auth/v1/health"
         env:
           SUPABASE_URL: '${{ secrets.SUPABASE_URL }}'
           SUPABASE_ANON_KEY: '${{ secrets.SUPABASE_ANON_KEY }}'
