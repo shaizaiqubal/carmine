@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 import './styles.css'
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY)
-const apiUrl = import.meta.env.VITE_API_URL
+const apiUrl = import.meta.env.VITE_API_URL.replace(/\/+$/, '')
 
 function Login() {
   const [email, setEmail] = useState('')
