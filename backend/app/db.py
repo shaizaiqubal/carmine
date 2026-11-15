@@ -20,7 +20,7 @@ class Database:
             path = Path(settings.database_path)
             path.parent.mkdir(parents=True, exist_ok=True)
             self.connection = sqlite3.connect(path, check_same_thread=False)
-        self.connection.row_factory = sqlite3.Row
+            self.connection.row_factory = sqlite3.Row
 
     def execute(self, sql: str, params: tuple[Any, ...] = ()):
         return self.connection.execute(sql, params)

@@ -54,7 +54,7 @@ def make_app(settings: Settings | None = None, database: Database | None = None)
     @app.get("/me")
     def me(user: AuthUser = Depends(current_user)):
         row = db.execute("SELECT id, email, role, created_at FROM users WHERE id = ?", (user.id,)).fetchone()
-        return dict(row)
+        return {"id": row[0], "email": row[1], "role": row[2], "created_at": row[3]}
 
     @app.post("/startups", status_code=201)
     def create_startup(payload: StartupCreate, user: AuthUser = Depends(current_user)):
