@@ -10,3 +10,7 @@ jobs:
         with: {python-version: '3.12'}
       - run: pip install -r requirements.txt
       - run: pytest
+      - name: Verify committed OpenAPI
+        run: |
+          python -c 'from app.main import app; import json; print(json.dumps(app.openapi(), indent=2, sort_keys=True))' > ../openapi.generated.json
+          diff -u ../openapi.json ../openapi.generated.json

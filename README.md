@@ -148,8 +148,51 @@ paid plan for a no-pause guarantee.
 
 ## Current scope and known limitations
 
-Implemented endpoints include `GET /health`, `GET /me`, `POST/GET/DELETE
-/startups`, and `GET /startups/{id}/objections`. The objection endpoint
-intentionally returns an empty list. The remaining API table, retrieval,
-attack modules, verdicts, and weekly jobs are not implemented yet.
+### Step 3 API changelog
+
+The API now implements the frontend-facing assumptions, queued runs, objection
+review, validation-task, and telemetry endpoints. All protected routes require
+the Supabase bearer token and scope every lookup through the authenticated
+user's startup or session.
+
+- Assumptions: `POST /startups/{id}/assumptions/extract` accepts `{ "text" }`
+  and returns `{ "assumptions": [{ "text", "category" }] }` without saving
+  anything; `GET` lists rows; `POST` accepts `{ "text", "category" }`; and
+  `PATCH /assumptions/{id}` accepts editable fields plus `status` of
+  `proposed`, `confirmed`, or `retired`.
+- Runs: `POST /startups/{id}/runs` returns a queued run; `GET` lists runs and
+  `GET /runs/{id}` returns its status. A confirmed assumption is required and
+  the per-startup daily limit is configurable.
+- Objections: the list endpoint supports `status`, `module`, `assumption_id`
+  (or `general`), `severity`, `limit`, and `offset`. Detail includes evidence,
+  source fields, and verdict history. Verdict accepts `accept`, `rebut`,
+  `investigate`, or `dismiss`, with optional `reason`, `response_plan`, and
+  `time_spent_ms`. Investigate creates an open validation task. A counter is
+  available only after `rebut`, once per verdict.
+- Validation tasks: `GET /startups/{id}/validation-tasks` lists tasks and
+  `PATCH /validation-tasks/{id}` accepts `{ "status" }`.
+- Telemetry: `POST /sessions` starts a server-timestamped session,
+  `PATCH /sessions/{id}` ends it with optional `{ "active_ms" }`, and
+  `POST /events` accepts up to 100 `{ "session_id", "event", "objection_id" }`
+  events. Supported events are `card shown`, `verdict start`, `verdict end`,
+  `rebuttal start`, `rebuttal end`, `idle`, and `resumed`; event timestamps
+  always come from the server.
+
+Successful creates return `201`; invalid input returns `422`; missing or
+cross-user resources return `404`; invalid checkpoint/state or a second
+counter returns `409`; oversized requests return `413`; rate limits return
+`429`; and exhausted interactive LLM providers return `503`. Errors use
+`{ "error": { "code", "message", "details" } }`. High- or critical-severity
+`rebut` and `dismiss` verdicts require a non-empty reason. Counter prompts use
+only stored evidence and the founder's reason and explicitly forbid invented
+sources; a failed model call does not consume the counter.
+
+The endpoints do not run the retrieval pipeline yet. Briefs, admin,
+stress-test, calibration, export, retrieval, pipeline work, and UI remain out
+of scope for this step. Generate the frontend contract locally with:
+
+```sh
+cd backend
+python -c 'from app.main import app; import json; print(json.dumps(app.openapi(), indent=2))' > ../openapi.json
+```
 

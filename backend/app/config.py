@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     llm_config_path: str = ""
     gemini_api_key: str = ""
     groq_api_key: str = ""
+    assumption_extract_max_chars: int = 20000
+    llm_interactive_rate_limit_per_minute: int = 5
+    runs_per_startup_per_day: int = 1
 
     model_config = SettingsConfigDict(
         env_file=(
