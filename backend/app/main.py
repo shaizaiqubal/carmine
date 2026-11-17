@@ -316,7 +316,10 @@ def make_app(settings: Settings | None = None, database: Database | None = None,
 
     @app.patch("/sessions/{session_id}")
     def patch_session(session_id: str, payload: SessionPatch, user: AuthUser = Depends(current_user)):
-        owned_session(session_id, user); ended = now_iso(); db.execute("UPDATE sessions SET ended_at = ?, active_ms = COALESCE(?, active_ms) WHERE id = ?", (ended, payload.active_ms, session_id)); db.commit(); return dict(db.execute("SELECT * FROM sessions WHERE id = ?", (session_id,)).fetchone())
+        owned_session(session_id, user)
+        last_event = db.execute("SELECT MAX(ts_ms) FROM ui_events WHERE session_id = ?", (session_id,)).fetchone()[0]
+        ended = datetime.fromtimestamp(last_event / 1000, timezone.utc).isoformat() if last_event else now_iso()
+        db.execute("UPDATE sessions SET ended_at = ?, active_ms = COALESCE(?, active_ms) WHERE id = ?", (ended, payload.active_ms, session_id)); db.commit(); return dict(db.execute("SELECT * FROM sessions WHERE id = ?", (session_id,)).fetchone())
 
     @app.post("/events", status_code=201)
     def create_events(payload: EventBatch, user: AuthUser = Depends(current_user)):

@@ -178,6 +178,15 @@ user's startup or session.
   `rebuttal start`, `rebuttal end`, `idle`, and `resumed`; event timestamps
   always come from the server.
 
+Frontend TODO: on tab close or navigation, send the final session PATCH using
+`navigator.sendBeacon()` or `fetch(..., { keepalive: true })`. The request
+should end the session using the latest server-stamped event time (falling
+back to the PATCH receipt time when there are no events). Use `visibilitychange` and an
+inactivity timer to emit `idle` after 60 seconds and `resumed` when activity
+returns. A backend cannot detect a tab disappearing after its last request, so
+an abandoned session with no close handshake remains open for later
+reconciliation.
+
 Successful creates return `201`; invalid input returns `422`; missing or
 cross-user resources return `404`; invalid checkpoint/state or a second
 counter returns `409`; oversized requests return `413`; rate limits return

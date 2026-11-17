@@ -134,3 +134,14 @@ def test_failed_counter_does_not_consume_counter(client, monkeypatch):
     fake.failed = False
     assert client.post(f"/objections/{objection_id}/counter").status_code == 201
     assert client.post(f"/objections/{objection_id}/counter").status_code == 409
+
+
+def test_ending_session_uses_last_server_stamped_event(client):
+    from datetime import datetime, timezone
+
+    session_id = client.post("/sessions").json()["id"]
+    client.post("/events", json={"events": [{"session_id": session_id, "event": "card shown"}]})
+    ended = client.patch(f"/sessions/{session_id}", json={"active_ms": 1000})
+    assert ended.status_code == 200
+    event_ts = client.db.execute("SELECT ts_ms FROM ui_events WHERE session_id = ?", (session_id,)).fetchone()[0]
+    assert ended.json()["ended_at"] == datetime.fromtimestamp(event_ts / 1000, timezone.utc).isoformat()
