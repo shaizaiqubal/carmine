@@ -12,6 +12,10 @@ debug_local = false
 attempt_seconds = 30
 total_seconds = 90
 
+[timeouts.query_plan]
+attempt_seconds = 30
+total_seconds = 90
+
 [timeouts.verify]
 attempt_seconds = 30
 total_seconds = 90
@@ -49,6 +53,9 @@ daily_requests = 1000
 daily_tokens = 200000
 
 [routes.extract]
+pairs = [["gemini", "gemini-3.5-flash-lite"], ["gemini", "gemini-3.1-flash-lite"]]
+
+[routes.query_plan]
 pairs = [["gemini", "gemini-3.5-flash-lite"], ["gemini", "gemini-3.1-flash-lite"]]
 
 [routes.verify]

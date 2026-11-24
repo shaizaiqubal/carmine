@@ -6,7 +6,7 @@ import tomllib
 from ..config import Settings
 
 
-PURPOSES = {"extract", "verify", "rank_brief", "assumption_extract", "counter", "other"}
+PURPOSES = {"query_plan", "extract", "verify", "rank_brief", "assumption_extract", "counter", "other"}
 
 
 @dataclass(frozen=True)

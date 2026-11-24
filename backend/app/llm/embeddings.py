@@ -39,32 +39,35 @@ class EmbeddingEngine:
     def _hash(text: str) -> str:
         return hashlib.sha256(text.encode()).hexdigest()
 
-    def embed(self, texts: list[str], startup_id: str | None = None) -> EmbeddingResult:
+    def embed(self, texts: list[str], startup_id: str | None = None, chunk_indices: list[int] | None = None) -> EmbeddingResult:
+        chunk_indices = chunk_indices or list(range(len(texts)))
+        if len(chunk_indices) != len(texts):
+            raise ValueError("chunk_indices must have one value per text")
         vectors: list[list[float] | None] = [None] * len(texts)
         hits = [False] * len(texts)
-        missing: list[tuple[int, str, str]] = []
+        missing: list[tuple[int, str, str, int]] = []
         for index, text in enumerate(texts):
             content_hash = self._hash(text)
             row = self.db.execute(
-                "SELECT vector_json FROM embeddings WHERE content_hash = ? AND model = ? AND revision = ? AND dim = ? AND startup_id IS ? LIMIT 1",
-                (content_hash, self.config.embedding_model, self.config.embedding_revision, self.config.embedding_dim, startup_id),
+                "SELECT vector_json FROM embeddings WHERE content_hash = ? AND chunk_index = ? AND model = ? AND revision = ? AND dim = ? AND startup_id IS ? LIMIT 1",
+                (content_hash, chunk_indices[index], self.config.embedding_model, self.config.embedding_revision, self.config.embedding_dim, startup_id),
             ).fetchone()
             if row:
                 vectors[index] = json.loads(row[0])
                 hits[index] = True
             else:
-                missing.append((index, text, content_hash))
+                missing.append((index, text, content_hash, chunk_indices[index]))
         if missing:
             encoded = self.model.encode([item[1] for item in missing], normalize_embeddings=True, convert_to_numpy=True, show_progress_bar=False)
-            for (index, _, content_hash), vector in zip(missing, encoded):
+            for (index, _, content_hash, chunk_index), vector in zip(missing, encoded):
                 raw_values = vector.tolist() if hasattr(vector, "tolist") else vector
                 values = [float(value) for value in raw_values]
                 if len(values) != self.config.embedding_dim:
                     raise ValueError(f"embedding dimension {len(values)} does not match configured {self.config.embedding_dim}")
                 vectors[index] = values
                 self.db.execute(
-                    "INSERT INTO embeddings (id, startup_id, content_hash, model, revision, dim, vector_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (__import__("uuid").uuid4().hex, startup_id, content_hash, self.config.embedding_model, self.config.embedding_revision, self.config.embedding_dim, json.dumps(values, separators=(",", ":"))),
+                    "INSERT INTO embeddings (id, startup_id, content_hash, chunk_index, model, revision, dim, vector_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (__import__("uuid").uuid4().hex, startup_id, content_hash, chunk_index, self.config.embedding_model, self.config.embedding_revision, self.config.embedding_dim, json.dumps(values, separators=(",", ":"))),
                 )
             self.db.commit()
         return EmbeddingResult([vector for vector in vectors if vector is not None], self.config.embedding_model, self.config.embedding_revision, self.config.embedding_dim, hits)
