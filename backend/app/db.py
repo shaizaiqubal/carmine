@@ -51,3 +51,33 @@ def apply_migrations(db: Database, migrations_dir: Path):
         db.executescript(path.read_text())
         db.execute("INSERT INTO schema_migrations (version) VALUES (?)", (path.name,))
         db.commit()
+    _repair_legacy_cache_schema(db)
+
+
+def _repair_legacy_cache_schema(db: Database):
+    """Upgrade pre-002 cache tables that were created before provider metadata existed."""
+    tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()}
+    if "llm_cache" in tables:
+        columns = {row[1] for row in db.execute("PRAGMA table_info(llm_cache)").fetchall()}
+        additions = {
+            "startup_id": "TEXT REFERENCES startups(id) ON DELETE CASCADE",
+            "purpose": "TEXT NOT NULL DEFAULT 'other'",
+            "provider": "TEXT NOT NULL DEFAULT 'unknown'",
+            "model": "TEXT NOT NULL DEFAULT 'unknown'",
+            "schema_version": "TEXT NOT NULL DEFAULT 'legacy'",
+            "temperature": "REAL NOT NULL DEFAULT 0",
+            "tokens_in": "INTEGER",
+            "tokens_out": "INTEGER",
+            "created_at": "TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "expires_at": "TEXT NOT NULL DEFAULT '1970-01-01T00:00:00+00:00'",
+        }
+        for name, definition in additions.items():
+            if name not in columns:
+                db.execute(f"ALTER TABLE llm_cache ADD COLUMN {name} {definition}")
+        db.execute("CREATE INDEX IF NOT EXISTS idx_llm_cache_lookup ON llm_cache(cache_key, startup_id, expires_at)")
+    if "embeddings" in tables:
+        columns = {row[1] for row in db.execute("PRAGMA table_info(embeddings)").fetchall()}
+        if "chunk_index" not in columns:
+            db.execute("ALTER TABLE embeddings ADD COLUMN chunk_index INTEGER NOT NULL DEFAULT 0")
+        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS uq_embeddings_identity_chunk ON embeddings(content_hash, chunk_index, model, revision, dim, startup_id)")
+    db.commit()
