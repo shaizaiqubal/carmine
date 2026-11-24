@@ -11,5 +11,5 @@ dist/
 *.sqlite
 *.sqlite3
 .DS_Store
-.gemini-key-test
+eval/out/
 

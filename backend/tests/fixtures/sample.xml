@@ -1,0 +1,4 @@
+<?xml version="1.0"?><rss version="2.0"><channel><title>Fixture feed</title>
+<item><title>Startup validation news</title><link>https://example.com/rss</link><description>Startup validation details</description><pubDate>Fri, 02 Jan 2026 00:00:00 GMT</pubDate></item>
+<item><title>Unrelated news</title><link>https://example.com/other</link><description>Nothing relevant</description></item>
+</channel></rss>
