@@ -144,7 +144,7 @@ class SlicePipeline:
         error = None
         for attempt in range(2):
             try:
-                result = self.llm.complete("query_plan", [{"role": "system", "content": prompt}], QueryPlan, startup_id=startup_id, run_id=run_id)
+                result = self.llm.complete("query_plan", [{"role": "system", "content": "You are Carmine's market query planner. Return only the requested JSON."}, {"role": "user", "content": prompt}], QueryPlan, startup_id=startup_id, run_id=run_id)
                 raw = result.value
                 return QueryPlan(**{connector: _dedupe_queries(getattr(raw, connector), self.module.max_queries_per_connector) for connector in self.module.connectors})
             except ValueError as exc:
@@ -241,7 +241,7 @@ class SlicePipeline:
             error = None
             for attempt in range(2):
                 try:
-                    result = self.llm.complete("extract", [{"role": "system", "content": prompt}], ExtractionOutput, startup_id=startup_id, run_id=run_id)
+                    result = self.llm.complete("extract", [{"role": "system", "content": "You are Carmine's market objection extractor. Return only the requested JSON."}, {"role": "user", "content": prompt}], ExtractionOutput, startup_id=startup_id, run_id=run_id)
                     break
                 except ValueError as exc:
                     error = exc
