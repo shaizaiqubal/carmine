@@ -47,7 +47,7 @@ def _dedupe_queries(values: list[str], cap: int) -> list[str]:
     for value in values:
         query = " ".join(value.split()).strip()
         key = query.casefold()
-        if query and key not in seen and len(query.split()) <= 8:
+        if query and key not in seen and len(query.split()) <= 8 and not query.casefold().startswith(("http://", "https://")):
             result.append(query)
             seen.add(key)
         if len(result) >= cap:
@@ -234,8 +234,8 @@ class SlicePipeline:
             passages = selected.get(item.source_id, [])[:self.module.max_passages_per_extraction_call]
             if not passages:
                 continue
-            passage_text = "\n\n".join(f"[passage {index + 1}, chars {passage.chunk.start}-{passage.chunk.end}]\n{passage.chunk.text}" for index, passage in enumerate(passages))
-            prompt = self.module.extraction_prompt + "\nSeverity rubric:\n" + json.dumps(self.module.severity_rubric, sort_keys=True) + "\nAssumption:\n" + wrap_untrusted_content(assumption, "assumption") + f"\nSource URL: {item.document.url}\nPublished date: {item.document.published_at}\nPassages:\n" + wrap_untrusted_content(passage_text, "retrieved passages") + "\nReturn a JSON array of objects with text, quote, source_url, assumption_id, severity, confidence."
+            passage_text = "\n\n".join(f"[passage_id=p{index + 1}, chars {passage.chunk.start}-{passage.chunk.end}]\n{passage.chunk.text}" for index, passage in enumerate(passages))
+            prompt = self.module.extraction_prompt + "\nSeverity rubric:\n" + json.dumps(self.module.severity_rubric, sort_keys=True) + "\nAssumption:\n" + wrap_untrusted_content(assumption, "assumption") + f"\nPublished date: {item.document.published_at}\nPassages:\n" + wrap_untrusted_content(passage_text, "retrieved passages") + "\nReturn a JSON array of objects with text, quote, passage_id, assumption_id, severity, confidence."
             summary["extraction_calls"] += 1
             result = None
             error = None
@@ -255,8 +255,19 @@ class SlicePipeline:
                 continue
             candidates = result.value.root
             for candidate in candidates:
-                quote_ok = quote_in_passages(candidate.quote, [passage.chunk.text for passage in passages])
-                self.db.execute("INSERT INTO objection_candidates (id, run_id, startup_id, assumption_id, module, source_id, text, quote, source_url, severity, confidence_raw, quote_in_passage, raw) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (str(uuid.uuid4()), run_id, startup_id, assumption_id, self.module.name, item.source_id, candidate.text, candidate.quote, candidate.source_url, candidate.severity, candidate.confidence, int(quote_ok), json.dumps(candidate.model_dump())))
+                passage_number = int(candidate.passage_id[1:])
+                if passage_number < 1 or passage_number > len(passages):
+                    logger.error("dropping candidate with invalid passage_id=%s source=%s", candidate.passage_id, item.document.url)
+                    continue
+                selected_passage = passages[passage_number - 1]
+                quote_ok = quote_in_passages(candidate.quote, [selected_passage.chunk.text])
+                fetched_urls = {doc.document.url for doc in docs}
+                if item.document.url not in fetched_urls:
+                    logger.error("dropping candidate with source outside fetched documents: %s", item.document.url)
+                    continue
+                raw = candidate.model_dump()
+                raw["source_url_resolved_by_pipeline"] = item.document.url
+                self.db.execute("INSERT INTO objection_candidates (id, run_id, startup_id, assumption_id, module, source_id, text, quote, source_url, severity, confidence_raw, quote_in_passage, raw) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (str(uuid.uuid4()), run_id, startup_id, assumption_id, self.module.name, item.source_id, candidate.text, candidate.quote, item.document.url, candidate.severity, candidate.confidence, int(quote_ok), json.dumps(raw)))
                 total += 1
                 summary["candidates_quote_in_passage_false"] += int(not quote_ok)
         self.db.commit()

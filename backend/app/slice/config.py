@@ -28,7 +28,7 @@ Connector style rules:
 - ddg: use review/complaint/alternatives patterns such as '<product> not worth it', 'alternatives to <competitor>', and '<problem> complaints'.
 - rss: keywords for filtering general feeds; do not use bare category words.
 Queries should be specific, problem-phrased, and no more than about eight words each.""",
-    extraction_prompt="""Report only objections supported by the supplied passages. If the passage is not evidence AGAINST the assumption, return an empty list. quote must be copied verbatim and contiguous from one supplied passage, no more than 300 characters; do not paraphrase, merge, or correct typos. text must be a specific, falsifiable objection tied to the assumption, never a generic concern. Never invent; return [] when evidence is thin. confidence is a rough 0-1 self-estimate and will be overwritten by verification. Use the supplied severity rubric.""",
+    extraction_prompt="""Report only objections supported by the supplied passages. If the passage is NOT evidence AGAINST the assumption, return an empty list. Return passage_id and quote; never return a source URL. quote must be copied verbatim and contiguous from the named passage, no more than 300 characters; do not paraphrase, merge, or correct typos. text must be a specific, falsifiable objection tied to the assumption, never a generic concern. Never invent; return [] when evidence is thin. confidence is a rough 0-1 self-estimate and will be overwritten by verification. Use the supplied severity rubric.""",
     severity_rubric={
         "critical": "Undermines the core business: no demand, a dominant free alternative, or platform absorption.",
         "high": "Materially hurts the plan.",

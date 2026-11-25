@@ -58,6 +58,10 @@ def rss(service: RetrievalService, query: str, limit: int, feeds: list[str] | tu
     for feed_url in feeds:
         try:
             feed = feedparser.parse(service.request_bytes(feed_url))
+            if getattr(feed, "bozo", False):
+                logger.warning("rss feed was not cleanly parseable: %s", feed_url)
+            if not feed.entries:
+                logger.warning("rss feed returned no parseable items: %s", feed_url)
             for entry in feed.entries:
                 content = " ".join(str(item.get("value", "")) for item in entry.get("content", []))
                 tags = " ".join(str(item.get("term", "")) for item in entry.get("tags", []))

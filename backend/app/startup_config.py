@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import quote_plus
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -86,7 +86,8 @@ def google_news_search_feed(keywords: list[str], competitor_names: list[str]) ->
     terms = [re.sub(r"[\s,]+", " ", value).strip() for value in [*keywords, *competitor_names] if isinstance(value, str) and value.strip()]
     if not terms:
         raise ValueError("at least one keyword or competitor name is required")
-    return "https://news.google.com/rss/search?" + urlencode({"q": " ".join(terms)}, safe="")
+    query = " ".join(terms)
+    return f"https://news.google.com/rss/search?q={quote_plus(query)}&hl=en-IN&gl=IN&ceid=IN:en"
 
 
 def feeds_for_profile(profile: dict[str, Any], config: MarketModuleConfig) -> list[str]:

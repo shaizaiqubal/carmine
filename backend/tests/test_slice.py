@@ -97,7 +97,7 @@ def test_pipeline_caps_and_stores_unverified_candidate():
     settings = LLMConfig.load()
     config = settings
     text = " ".join(f"This passage says customers complain about the product and use a free alternative {i}." for i in range(70))
-    llm = FakeLLM([ObjectionCandidate(text="The market has a free alternative", quote="customers complain about the product", source_url="https://example.com/article", assumption_id="assumption", severity="high", confidence=0.7)])
+    llm = FakeLLM([ObjectionCandidate(text="The market has a free alternative", quote="customers complain about the product", passage_id="p1", assumption_id="assumption", severity="high", confidence=0.7)])
     embedding_config = __import__("dataclasses").replace(settings, embedding_dim=3, embedding_model="fake", embedding_revision="test")
     model = FakeEmbeddingModel()
     pipeline = SlicePipeline(db, llm=llm, retrieval=FakeRetrieval(db, text), embeddings=EmbeddingEngine(db, embedding_config, model=model))

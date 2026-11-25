@@ -15,7 +15,7 @@ class ObjectionCandidate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     text: str = Field(min_length=1)
     quote: str = Field(min_length=1, max_length=300)
-    source_url: str = Field(min_length=1)
+    passage_id: str = Field(pattern=r"^p[1-9][0-9]*$")
     assumption_id: str = Field(min_length=1)
     severity: Literal["critical", "high", "medium", "low"]
     confidence: float = Field(ge=0, le=1)
