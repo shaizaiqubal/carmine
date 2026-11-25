@@ -1,0 +1,34 @@
+name: juicero
+profile:
+  idea: A Wi-Fi-connected countertop juicer that makes fresh cold-pressed juice at home from single-serve packs of chopped produce
+  customer: Affluent, health-conscious urban consumers who already spend on premium juice and wellness products
+  keywords:
+    - cold-pressed juice
+    - home juicer
+    - juice subscription
+    - connected kitchen appliance
+  competitor_names:
+    - Suja
+    - Pressed
+    - Vitamix
+    - Breville
+assumptions:
+  - text: Affluent urban consumers will pay about $700 for a countertop juicer.
+    category: pricing
+  - text: Customers will keep buying produce packs on subscription, and the packs are the long-term business.
+    category: monetization
+  - text: Pre-chopped produce packs can be sourced, shipped, and kept fresh at a cost that leaves a margin.
+    category: operations
+  - text: The machine's high-force press delivers yield and quality that justify its price over cheaper juicers.
+    category: product
+  - text: Consumers will choose pack-based home juicing over bottled cold-pressed juice and traditional home juicers.
+    category: competition
+market_module:
+  se_sites:
+    - startups
+    - cooking
+  rss_feeds:
+    # Uncapped run only. Almost everything returned will be post-outcome coverage.
+    - "https://news.google.com/rss/search?q=Juicero&hl=en-US&gl=US&ceid=US:en"
+    # Capped (pre-launch) run, swap in the line below and test that it still returns items:
+    # - "https://news.google.com/rss/search?q=cold+pressed+juice+before:2016-12-31&hl=en-US&gl=US&ceid=US:en"

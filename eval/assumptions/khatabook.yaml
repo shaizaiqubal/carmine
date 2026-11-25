@@ -1,0 +1,31 @@
+name: khatabook
+profile:
+  idea: A free mobile ledger app that replaces the paper khata small shopkeepers in India use to track customer credit
+  customer: Small shopkeepers and traders in India, such as kirana stores and local wholesalers
+  keywords:
+    - digital khata app
+    - udhaar credit ledger
+    - shopkeeper bookkeeping app
+    - small business ledger India
+  competitor_names:
+    - OkCredit
+    - Vyapar
+assumptions:
+  - text: Small shopkeepers will log credit transactions in an app daily instead of in their paper khata.
+    category: demand
+  - text: Automated SMS and WhatsApp reminders will get customers to pay without damaging the shopkeeper's relationship with them.
+    category: problem
+  - text: A free app can reach millions of shopkeepers and keep them using it daily.
+    category: growth
+  - text: Once merchants rely on the ledger, they will use and pay for payments, merchant credit, or premium features built on it.
+    category: monetization
+  - text: Existing billing and accounting software is too complicated for this segment and will not capture it.
+    category: competition
+market_module:
+  se_sites:
+    - startups
+    - money
+    - india
+  rss_feeds:
+    - "https://news.google.com/rss/search?q=Khatabook&hl=en-IN&gl=IN&ceid=IN:en"
+    - "https://news.google.com/rss/search?q=OkCredit+OR+Vyapar&hl=en-IN&gl=IN&ceid=IN:en"

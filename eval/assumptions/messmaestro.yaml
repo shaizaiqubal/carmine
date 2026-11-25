@@ -1,0 +1,27 @@
+name: messmaestro
+profile:
+  idea: An Android app that reduces food wastage in hostel messes by giving students incentives to tell the mess in advance whether to prepare their meal
+  customer: Students in prepaid hostel messes, and the mess owners and hostel authorities who run them
+  keywords:
+    - hostel mess food waste
+    - meal skipping refund
+    - prepaid mess system
+    - college mess management app
+  competitor_names: []  # none named on the project page, left empty rather than invent
+assumptions:
+  - text: Students will pre-skip meals up to 3 days ahead if they get a refund.
+    category: demand
+  - text: Mess owners can cut food preparation based on that notice, so wastage actually drops.
+    category: operations
+  - text: Refunding skipped meals as credits or cash is financially viable for the mess.
+    category: economics
+  - text: Mess owners and hostel authorities beyond the pilot college will adopt the system.
+    category: adoption
+  - text: Results from a 3-week beta at one college will carry over to other hostels.
+    category: evidence
+market_module:
+  se_sites:
+    - india
+    - sustainability
+  rss_feeds:
+    - "https://news.google.com/rss/search?q=hostel+mess+food+waste+India&hl=en-IN&gl=IN&ceid=IN:en"
